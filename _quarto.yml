@@ -7,7 +7,12 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
+      - text: "About" 
+        href: about.qmd
+      - text: "Hands On Exercise"
+        menu: 
+          - text: "Hands On Exercise 1.1"
+            href: hands-on-exercise/hands-on-exercise-1_1.qmd
 
 format:
   html:

@@ -1,0 +1,21 @@
+---
+title: "Hands On Exercise 1.1"
+format: html
+---
+
+```{r}
+
+#| Plotting the Geospatial Data of "Master Plan 2014 Subzone Boundary" 
+
+pacman::p_load(sf, tidyverse)
+
+mpsz = st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
+cyclingpath = st_read(dsn = "data/geospatial", layer = "CyclingPathGazette")
+preschool = st_read("data/geospatial/PreSchoolsLocation.kml")
+
+st_geometry(mpsz)
+glimpse(mpsz)
+head(mpsz, n=5)
+plot(mpsz)
+
+```
