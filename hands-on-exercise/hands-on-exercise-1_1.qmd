@@ -3,15 +3,21 @@ title: "Hands On Exercise 1.1"
 format: html
 ---
 
+## Hands On Exercisee 1.1 - Geospatial Data Science with R
+
 ```{r}
 
-#| Plotting the Geospatial Data of "Master Plan 2014 Subzone Boundary" 
+#| Loading the necessary libraries
 
 pacman::p_load(sf, tidyverse)
+
+#| Read the important data sets including Shapefile of Singapore Subzone, Cycling Path and Preschool locations
 
 mpsz = st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 cyclingpath = st_read(dsn = "data/geospatial", layer = "CyclingPathGazette")
 preschool = st_read("data/geospatial/PreSchoolsLocation.kml")
+
+#| Plotting the Geospatial Data of "Master Plan 2014 Subzone Boundary" 
 
 st_geometry(mpsz)
 glimpse(mpsz)
