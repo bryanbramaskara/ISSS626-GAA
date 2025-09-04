@@ -1,0 +1,314 @@
+---
+title: "Hands On Exercise 2.1"
+format: html
+---
+
+## First-order Spatial Point Patterns Analysis Methods
+
+```{r}
+
+#| Installing and loading packages
+
+pacman::p_load(sf, terra, spatstat, 
+               tmap, rvest, tidyverse)
+
+
+#| Importing and Wrangling Geospatial Data Sets
+
+mpsz_sf <- st_read("data/geospatial/MasterPlan2019SubzoneBoundaryNoSeaKML.kml") %>% 
+  st_zm(drop = TRUE, what = "ZM") %>% st_transform(crs = 3414)
+
+#| Extracting KML data features
+
+extract_kml_field <- function(html_text, field_name) {
+  if (is.na(html_text) || html_text == "") return(NA_character_)
+  
+  page <- read_html(html_text)
+  rows <- page %>% html_elements("tr")
+  
+  value <- rows %>%
+    keep(~ html_text2(html_element(.x, "th")) == field_name) %>%
+    html_element("td") %>%
+    html_text2()
+  
+  if (length(value) == 0) NA_character_ else value
+}
+
+mpsz_sf <- mpsz_sf %>%
+  mutate(
+    REGION_N = map_chr(Description, extract_kml_field, "REGION_N"),
+    PLN_AREA_N = map_chr(Description, extract_kml_field, "PLN_AREA_N"),
+    SUBZONE_N = map_chr(Description, extract_kml_field, "SUBZONE_N"),
+    SUBZONE_C = map_chr(Description, extract_kml_field, "SUBZONE_C")
+  ) %>%
+  select(-Name, -Description) %>%
+  relocate(geometry, .after = last_col())
+
+mpsz_cl <- mpsz_sf %>%
+  filter(SUBZONE_N != "SOUTHERN GROUP",
+         PLN_AREA_N != "WESTERN ISLANDS",
+         PLN_AREA_N != "NORTH-EASTERN ISLANDS")
+
+write_rds(mpsz_cl, 
+          "data/rds/mpsz_cl.rds")
+
+childcare_sf <- st_read("data/geospatial/ChildCareServices.kml") %>% 
+  st_zm(drop = TRUE, what = "ZM") %>%
+  st_transform(crs = 3414)
+
+#| Mapping the geospatial data sets
+
+tmap_mode('view')
+tm_shape(childcare_sf)+
+  tm_dots()
+
+tmap_mode('plot')
+
+#| Data Wrangling - Converting sf data frames to ppp class
+
+childcare_ppp <- as.ppp(childcare_sf)
+class(childcare_ppp)
+summary(childcare_ppp)
+
+#| Data Wrangling - Creating owin object
+
+sg_owin <- as.owin(mpsz_cl)
+
+class(sg_owin)
+plot(sg_owin)
+
+#| Data Wrangling - Combining point events object and owin object
+
+childcareSG_ppp = childcare_ppp[sg_owin]
+
+childcareSG_ppp
+
+#| Clark-Evan Test for Nearest Neighbour Analysis
+#| Perform the Clark-Evans test without CSR
+
+clarkevans.test(childcareSG_ppp,
+                correction="none",
+                clipregion="sg_owin",
+                alternative=c("clustered"))
+
+#| Perform the Clark-Evans test with CSR
+
+clarkevans.test(childcareSG_ppp,
+                correction="none",
+                clipregion="sg_owin",
+                alternative=c("clustered"),
+                method="MonteCarlo",
+                nsim=99)
+
+#| Kernel Density Estimation Method
+#| Working with automatic bandwidth selection method
+
+kde_SG_diggle <- density(
+  childcareSG_ppp,
+  sigma=bw.diggle,
+  edge=TRUE,
+  kernel="gaussian") 
+
+plot(kde_SG_diggle)
+summary(kde_SG_diggle)
+
+bw <- bw.diggle(childcareSG_ppp)
+bw
+
+#| Rescalling KDE values
+
+childcareSG_ppp_km <- rescale.ppp(
+  childcareSG_ppp, 1000, "km")
+
+kde_childcareSG_km <- density(childcareSG_ppp_km,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                              kernel="gaussian")
+
+plot(kde_childcareSG_km)
+
+#| Working with different automatic badwidth methods
+
+bw.CvL(childcareSG_ppp_km)
+bw.scott(childcareSG_ppp_km)
+bw.ppl(childcareSG_ppp_km)
+bw.diggle(childcareSG_ppp_km)
+
+kde_childcareSG.ppl <- density(childcareSG_ppp_km, 
+                               sigma=bw.ppl, 
+                               edge=TRUE,
+                               kernel="gaussian")
+par(mfrow=c(1,2))
+plot(kde_childcareSG_km, main = "bw.diggle")
+plot(kde_childcareSG.ppl, main = "bw.ppl")
+
+#| Working with different kernel methods
+
+par(mfrow=c(2,2))
+plot(density(childcareSG_ppp_km, 
+             sigma=0.2959712, 
+             edge=TRUE, 
+             kernel="gaussian"), 
+     main="Gaussian")
+plot(density(childcareSG_ppp_km, 
+             sigma=0.2959712, 
+             edge=TRUE, 
+             kernel="epanechnikov"), 
+     main="Epanechnikov")
+plot(density(childcareSG_ppp_km, 
+             sigma=0.2959712, 
+             edge=TRUE, 
+             kernel="quartic"), 
+     main="Quartic")
+plot(density(childcareSG_ppp_km, 
+             sigma=0.2959712, 
+             edge=TRUE, 
+             kernel="disc"), 
+     main="Disc")
+
+
+#| Fixed and Adaptive KDE
+#| Computing KDE by using fixed bandwidth
+
+kde_childcareSG_fb <- density(childcareSG_ppp_km,
+                              sigma=0.6, 
+                              edge=TRUE,
+                              kernel="gaussian")
+plot(kde_childcareSG_fb)
+
+#| Computing KDE by using adaptive bandwidth
+
+kde_childcareSG_ab <- adaptive.density(
+  childcareSG_ppp_km, 
+  method="kernel")
+plot(kde_childcareSG_ab)
+
+par(mfrow=c(1,2))
+plot(kde_childcareSG_fb, main = "Fixed bandwidth")
+plot(kde_childcareSG_ab, main = "Adaptive bandwidth")
+
+#| Plotting cartographic quality KDE map
+#| Converting gridded output into raster
+
+kde_childcareSG_bw_terra <- rast(kde_childcareSG_km)
+class(kde_childcareSG_bw_terra)
+kde_childcareSG_bw_terra
+
+#| Assigning projection systems
+
+crs(kde_childcareSG_bw_terra) <- "EPSG:3414"
+
+kde_childcareSG_bw_terra
+
+#| Plotting KDE map with tmap
+
+tm_shape(kde_childcareSG_bw_terra) + 
+  tm_raster(col.scale = 
+              tm_scale_continuous(
+                values = "viridis"),
+            col.legend = tm_legend(
+            title = "Density values",
+            title.size = 0.7,
+            text.size = 0.7,
+            bg.color = "white",
+            bg.alpha = 0.7,
+            position = tm_pos_in(
+              "right", "bottom"),
+            frame = TRUE)) +
+  tm_graticules(labels.size = 0.7) +
+  tm_compass() +
+  tm_layout(scale = 1.0)
+
+#| First Order SPPA at the Planning Subzone Level
+#| Geospatial data wrangling
+#| Extracting study area
+
+pg <- mpsz_cl %>%
+  filter(PLN_AREA_N == "PUNGGOL")
+tm <- mpsz_cl %>%
+  filter(PLN_AREA_N == "TAMPINES")
+ck <- mpsz_cl %>%
+  filter(PLN_AREA_N == "CHOA CHU KANG")
+jw <- mpsz_cl %>%
+  filter(PLN_AREA_N == "JURONG WEST")
+
+par(mfrow=c(2,2))
+plot(st_geometry(pg), main = "Ponggol")
+plot(st_geometry(tm), main = "Tampines")
+plot(st_geometry(ck), main = "Choa Chu Kang")
+plot(st_geometry(jw), main = "Jurong West")
+
+#| Creating owin object
+
+pg_owin = as.owin(pg)
+tm_owin = as.owin(tm)
+ck_owin = as.owin(ck)
+jw_owin = as.owin(jw)
+
+#| Combining point events object and owin object
+
+childcare_pg_ppp = childcare_ppp[pg_owin]
+childcare_tm_ppp = childcare_ppp[tm_owin]
+childcare_ck_ppp = childcare_ppp[ck_owin]
+childcare_jw_ppp = childcare_ppp[jw_owin]
+
+childcare_pg_ppp.km = rescale.ppp(childcare_pg_ppp, 1000, "km")
+childcare_tm_ppp.km = rescale.ppp(childcare_tm_ppp, 1000, "km")
+childcare_ck_ppp.km = rescale.ppp(childcare_ck_ppp, 1000, "km")
+childcare_jw_ppp.km = rescale.ppp(childcare_jw_ppp, 1000, "km")
+
+par(mfrow=c(2,2))
+plot(unmark(childcare_pg_ppp.km), 
+  main="Punggol")
+plot(unmark(childcare_tm_ppp.km), 
+  main="Tampines")
+plot(unmark(childcare_ck_ppp.km), 
+  main="Choa Chu Kang")
+plot(unmark(childcare_jw_ppp.km), 
+  main="Jurong West")
+
+
+#| Clark and Evans Test
+#| Choa Chu Kang planning area
+
+clarkevans.test(childcare_ck_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+
+#| Tampines planning area
+
+clarkevans.test(childcare_tm_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+
+#| Computing KDE surfaces by planning area
+
+par(mfrow=c(2,2))
+plot(density(childcare_pg_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Punggol")
+plot(density(childcare_tm_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Tempines")
+plot(density(childcare_ck_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Choa Chu Kang")
+plot(density(childcare_jw_ppp.km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Jurong West")
+
+
+
+```
