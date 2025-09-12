@@ -1,0 +1,219 @@
+---
+title: "Hands On Exercise 3.1"
+format: html
+---
+
+# 6. Spatio-Temporal Point Patterns Analysis
+
+## **6.1 Overview**
+
+A spatio-temporal point process (also called space-time or spatial-temporal point process) is a random collection of points, where each point represents the time and location of an event. Examples of events include incidence of disease, sightings or births of a species, or the occurrences of fires, earthquakes, lightning strikes, tsunamis, or volcanic eruptions.
+
+The analysis of spatio-temporal point patterns is becoming increasingly necessary, given the rapid emergence of geographically and temporally indexed data in a wide range of fields. Several spatio-temporal point patterns analysis methods have been introduced and implemented in R in the last ten years. This chapter shows how various R packages can be combined to run a set of spatio-temporal point pattern analyses in a guided and intuitive way. A real world forest fire events in Kepulauan Bangka Belitung, Indonesia from 1st January 2023 to 31st December 2023 is used to illustrate the methods, procedures and interpretations.
+
+## 6.2 Research Questions
+
+The specific questions we would like to answer are:
+
+-   are the locations of forest fire in Kepulauan Bangka Belitung spatial and spatio-temporally independent?
+
+-   if the answer is NO, where and when the observed forest fire locations tend to cluster?
+
+## 6.3 The data
+
+For the purpose of this exercise, two data sets will be used, they are:
+
+-   *forestfires*, a csv file provides locations of forest fire detected from the Moderate Resolution Imaging Spectroradiometer (MODIS) sensor data. The data are downloaded from [Fire Information for Resource Management System](https://firms.modaps.eosdis.nasa.gov/download/). For the purpose of this exercise, only forest fires within Kepulauan Bangka Belitung will be used.
+
+-   *Kepulauan_Bangka_Belitung*, an ESRI shapefile showing the sub-district (i.e. [kelurahan](https://en.wikipedia.org/wiki/Villages_of_Indonesia)) boundary of Kepulauan Bangka Belitung. The data set was downloaded from [Indonesia Geospatial](https://www.indonesia-geospasial.com/2023/05/download-shapefile-batas-administrasi.html) portal. The original data covers the whole Indonesia. For the purpose of this exercise, only sub-districts within Kepulauan Bangka Belitung are extracted.
+
+## 6.4 Installing and loading R packages
+
+```{r}
+#| eval: false
+pacman::p_load(sf, raster, spatstat, sparr, tmap, tidyverse)
+```
+
+## 6.5 Importing and Preparing Study Area
+
+### 6.5.1 Importing study area
+
+```{r}
+#| eval: false
+kbb_sf <- st_read(dsn="data/rawdata",
+               layer = "Kepulauan_Bangka_Belitung") %>%
+  st_union() %>%
+  st_zm(drop = TRUE, what = "ZM") %>%
+  st_transform(crs = 32748)
+```
+
+### 6.5.2 Converting OWIN
+
+```{r}
+#| eval: false
+kbb_owin <- as.owin(kbb_sf)
+kbb_owin
+
+class(kbb_owin)
+```
+
+## 6.6 Importing and Preparing Forest Fire data
+
+```{r}
+#| eval: false
+fire_sf <- read_csv("data/rawdata/modis/modis_2024_Indonesia.csv") %>%
+  st_as_sf(coords = c("longitude", "latitude"),
+                       crs = 4326) %>%
+  st_transform(crs = 32748)
+```
+
+Because **ppp** object only accept numerical or character as mark. The code chunk below is used to convert data type of *acq_date* to numeric.
+
+```{r}
+#| eval: false
+fire_sf <- fire_sf %>% 
+  mutate(DayofYear = yday(acq_date)) %>%
+  mutate(Month_num = month(acq_date)) %>%
+  mutate(Month_fac = month(acq_date, 
+                           label = TRUE, 
+                           abbr = FALSE))
+```
+
+## 6.7 Visualising the Fire Points
+
+### 6.7.1 Overall plot
+
+```{r}
+#| eval: false
+tm_shape(kbb_sf) + 
+  tm_polygons()
+tm_shape(fire_sf) +
+  tm_dots()
+```
+
+### 6.7.2 Visualising geographic distribution of forest fires by month
+
+```{r}
+#| eval: false
+tm_shape(kbb_sf)+
+  tm_polygons() +
+tm_shape(fire_sf) +
+  tm_dots(size = 0.1) +
+tm_facets(by="Month_fac", 
+            free.coords=FALSE, 
+            drop.units = TRUE)
+```
+
+## 6.8. Computing STKDE by month
+
+### 6.8.1 Extracting forest fires by month
+
+```{r}
+#| eval: false
+fire_month <- fire_sf %>% 
+  select(Month_num)
+```
+
+### 6.8.2 Creating ppp
+
+```{r}
+#| eval: false
+fire_month_ppp <- as.ppp(fire_month)
+fire_month_ppp
+
+summary(fire_month_ppp)
+
+any(duplicated(fire_month_ppp))
+```
+
+### 6.8.3 Including Owin Object
+
+```{r}
+#| eval: false
+fire_month_owin <- fire_month_ppp[kbb_owin]
+summary(fire_month_owin)
+
+plot(fire_month_owin)
+```
+
+### 6.8.4 Computing Spatio-temporal KDE
+
+```{r}
+#| eval: false
+st_kde <- spattemp.density(fire_month_owin)
+summary(st_kde)
+
+```
+
+### 6.8.5 Plotting the spatio-temporal KDE object
+
+```{r}
+#| eval: false
+tims <- c(7,8,9,10,11,12)
+par(mfcol=c(2,3))
+for(i in tims){ 
+  plot(st_kde, i, 
+       override.par=FALSE, 
+       fix.range=TRUE, 
+       main=paste("KDE at month",i))
+}
+```
+
+## 6.9 Computing STKDE by Day of Year
+
+### 6.9.1 Creating ppp object
+
+```{r}
+#| eval: false
+fire_yday_ppp <- fire_sf %>% 
+  select(DayofYear) %>%
+  as.ppp()
+```
+
+### 6.9.2 Including Owin Object
+
+```{r}
+#| eval: false
+fire_yday_owin <- fire_yday_ppp[kbb_owin]
+summary(fire_yday_owin)
+```
+
+### 6.9.3 Spatio-temporal Density Estimate
+
+```{r}
+#| eval: false
+kde_yday <- spattemp.density(
+  fire_yday_owin)
+summary(kde_yday)
+
+plot(kde_yday)
+```
+
+## 6.10 Computing STKDE by Day of Year: Improved method
+
+One of the nice function provides in sparr package is `BOOT.spattemp()`. It support bandwidth selection for standalone spatiotemporal density/intensity based on bootstrap estimation of the MISE, providing an isotropic scalar spatial bandwidth and a scalar temporal bandwidth.
+
+Code chunk below uses `BOOT.spattemp()` to determine both the spatial bandwidth and the scalar temporal bandwidth.
+
+```{r}
+#| eval: false
+set.seed(1234)
+BOOT.spattemp(fire_yday_owin) 
+```
+
+### 6.10.1 Computing spatio-temporal KDE
+
+```{r}
+#| eval: false
+kde_yday <- spattemp.density(fire_yday_owin,
+                             h = 9000,
+                             lambda = 19)
+summary(kde_yday)
+```
+
+### 6.10.2 Plotting the output spatio-temporal KDE
+
+```{r}
+#| eval: false
+plot(kde_yday)
+```

@@ -19,6 +19,8 @@ website:
             href: hands-on-exercise/hands-on-exercise-2_1.qmd
           - text: "Hands On Exercise 2.2"
             href: hands-on-exercise/hands-on-exercise-2_2.qmd
+          - text: "Hands On Exercise 3.1"
+            href: hands-on-exercise/hands-on-exercise-3_1.qmd
 
 format:
   html:
