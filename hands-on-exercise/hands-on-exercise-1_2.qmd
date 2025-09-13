@@ -1,6 +1,14 @@
 ---
 title: "Hands On Exercise 1.2"
 format: html
+author: "Bryan Bramaskara"
+date: "September 4, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
 ---
 
 ## Hands On Exercisee 1.2 - Thematic Mapping and GeoVisualisation with R

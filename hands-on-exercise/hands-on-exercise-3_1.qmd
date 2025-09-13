@@ -1,6 +1,14 @@
 ---
 title: "Hands On Exercise 3.1"
 format: html
+author: "Bryan Bramaskara"
+date: "September 11, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
 ---
 
 # 6. Spatio-Temporal Point Patterns Analysis

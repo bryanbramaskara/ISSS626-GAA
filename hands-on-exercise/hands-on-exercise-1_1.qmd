@@ -1,6 +1,14 @@
 ---
 title: "Hands On Exercise 1.1"
 format: html
+author: "Bryan Bramaskara"
+date: "September 4, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
 ---
 
 # Hands On Exercisee 1.1 - Geospatial Data Science with R

@@ -1,6 +1,14 @@
 ---
 title: "Hands On Exercise 2.1"
 format: html
+author: "Bryan Bramaskara"
+date: "September 4, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
 ---
 
 ## First-order Spatial Point Patterns Analysis Methods
