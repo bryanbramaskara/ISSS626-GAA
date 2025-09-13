@@ -1,5 +1,5 @@
 ---
-title: "In-class Exercise 3: Interactive K-function"
+title: "In-class Exercise 3A: Interactive K-function"
 author: "Bryan Bramaskara"
 date: "September 13, 2025"
 date-modified: "last-modified"
