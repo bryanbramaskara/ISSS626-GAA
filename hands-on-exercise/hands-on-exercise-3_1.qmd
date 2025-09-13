@@ -38,7 +38,6 @@ For the purpose of this exercise, two data sets will be used, they are:
 ## 6.4 Installing and loading R packages
 
 ```{r}
-#| eval: false
 pacman::p_load(sf, raster, spatstat, sparr, tmap, tidyverse)
 ```
 
@@ -47,7 +46,6 @@ pacman::p_load(sf, raster, spatstat, sparr, tmap, tidyverse)
 ### 6.5.1 Importing study area
 
 ```{r}
-#| eval: false
 kbb_sf <- st_read(dsn="data/rawdata",
                layer = "Kepulauan_Bangka_Belitung") %>%
   st_union() %>%
@@ -58,7 +56,6 @@ kbb_sf <- st_read(dsn="data/rawdata",
 ### 6.5.2 Converting OWIN
 
 ```{r}
-#| eval: false
 kbb_owin <- as.owin(kbb_sf)
 kbb_owin
 
@@ -68,7 +65,6 @@ class(kbb_owin)
 ## 6.6 Importing and Preparing Forest Fire data
 
 ```{r}
-#| eval: false
 fire_sf <- read_csv("data/rawdata/modis/modis_2024_Indonesia.csv") %>%
   st_as_sf(coords = c("longitude", "latitude"),
                        crs = 4326) %>%
@@ -78,7 +74,6 @@ fire_sf <- read_csv("data/rawdata/modis/modis_2024_Indonesia.csv") %>%
 Because **ppp** object only accept numerical or character as mark. The code chunk below is used to convert data type of *acq_date* to numeric.
 
 ```{r}
-#| eval: false
 fire_sf <- fire_sf %>% 
   mutate(DayofYear = yday(acq_date)) %>%
   mutate(Month_num = month(acq_date)) %>%
@@ -92,7 +87,6 @@ fire_sf <- fire_sf %>%
 ### 6.7.1 Overall plot
 
 ```{r}
-#| eval: false
 tm_shape(kbb_sf) + 
   tm_polygons()
 tm_shape(fire_sf) +
@@ -102,7 +96,6 @@ tm_shape(fire_sf) +
 ### 6.7.2 Visualising geographic distribution of forest fires by month
 
 ```{r}
-#| eval: false
 tm_shape(kbb_sf)+
   tm_polygons() +
 tm_shape(fire_sf) +
@@ -117,7 +110,6 @@ tm_facets(by="Month_fac",
 ### 6.8.1 Extracting forest fires by month
 
 ```{r}
-#| eval: false
 fire_month <- fire_sf %>% 
   select(Month_num)
 ```
@@ -125,7 +117,6 @@ fire_month <- fire_sf %>%
 ### 6.8.2 Creating ppp
 
 ```{r}
-#| eval: false
 fire_month_ppp <- as.ppp(fire_month)
 fire_month_ppp
 
@@ -137,7 +128,6 @@ any(duplicated(fire_month_ppp))
 ### 6.8.3 Including Owin Object
 
 ```{r}
-#| eval: false
 fire_month_owin <- fire_month_ppp[kbb_owin]
 summary(fire_month_owin)
 
@@ -147,7 +137,6 @@ plot(fire_month_owin)
 ### 6.8.4 Computing Spatio-temporal KDE
 
 ```{r}
-#| eval: false
 st_kde <- spattemp.density(fire_month_owin)
 summary(st_kde)
 
@@ -156,7 +145,6 @@ summary(st_kde)
 ### 6.8.5 Plotting the spatio-temporal KDE object
 
 ```{r}
-#| eval: false
 tims <- c(7,8,9,10,11,12)
 par(mfcol=c(2,3))
 for(i in tims){ 
@@ -172,7 +160,6 @@ for(i in tims){
 ### 6.9.1 Creating ppp object
 
 ```{r}
-#| eval: false
 fire_yday_ppp <- fire_sf %>% 
   select(DayofYear) %>%
   as.ppp()
@@ -181,7 +168,6 @@ fire_yday_ppp <- fire_sf %>%
 ### 6.9.2 Including Owin Object
 
 ```{r}
-#| eval: false
 fire_yday_owin <- fire_yday_ppp[kbb_owin]
 summary(fire_yday_owin)
 ```
@@ -189,7 +175,6 @@ summary(fire_yday_owin)
 ### 6.9.3 Spatio-temporal Density Estimate
 
 ```{r}
-#| eval: false
 kde_yday <- spattemp.density(
   fire_yday_owin)
 summary(kde_yday)
@@ -204,7 +189,6 @@ One of the nice function provides in sparr package is `BOOT.spattemp()`. It supp
 Code chunk below uses `BOOT.spattemp()` to determine both the spatial bandwidth and the scalar temporal bandwidth.
 
 ```{r}
-#| eval: false
 set.seed(1234)
 BOOT.spattemp(fire_yday_owin) 
 ```
@@ -212,7 +196,6 @@ BOOT.spattemp(fire_yday_owin)
 ### 6.10.1 Computing spatio-temporal KDE
 
 ```{r}
-#| eval: false
 kde_yday <- spattemp.density(fire_yday_owin,
                              h = 9000,
                              lambda = 19)
@@ -222,6 +205,5 @@ summary(kde_yday)
 ### 6.10.2 Plotting the output spatio-temporal KDE
 
 ```{r}
-#| eval: false
 plot(kde_yday)
 ```
