@@ -21,6 +21,8 @@ website:
             href: hands-on-exercise/hands-on-exercise-2_2.qmd
           - text: "Hands On Exercise 3.1"
             href: hands-on-exercise/hands-on-exercise-3_1.qmd
+          - text: "Hands On Exercise 4"
+            href: hands-on-exercise/hands-on-exercise-4.qmd
       - text: "In-class Exercise"
         menu: 
           - text: "In-class Exercise 3A"
