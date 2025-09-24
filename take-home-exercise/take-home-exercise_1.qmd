@@ -17,7 +17,7 @@ The locations of businesses and firms are more than just points on a map—they 
 
 Studying the spatio-temporal patterns of where and when businesses emerge gives us valuable insights into how urban forms evolve. It allows urban planners and policymakers to identify clusters, anticipate growth, and design strategies that encourage efficiency, sustainability, and community well-being. By looking at the establishment of new businesses over time, we can see not just static snapshots but dynamic trends that point toward future possibilities. In this exercise, our focus is on Singapore during the first half of 2025, exploring the patterns and interactions that shape its business landscape.
 
-![Source: <https://ifonlysingaporeans.blogspot.com/2013/02/land-use-plan.html>](images/clipboard-298876454.png)
+![Source: <https://ifonlysingaporeans.blogspot.com/2013/02/land-use-plan.html>](clipboard-298876454.png)
 
 ## 1.1 Objectives
 
