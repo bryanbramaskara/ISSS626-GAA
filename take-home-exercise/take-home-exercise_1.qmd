@@ -899,10 +899,10 @@ anim <- animate(
 )
 anim
 
-anim_save("images/new_business_anim.gif", animation = anim)
+anim_save("new_business_anim.gif", animation = anim)
 ```
 
-![](images/new_business_anim.gif){fig-align="center"}
+![](new_business_anim.gif){fig-align="center"}
 
 This code creates an animated map of **new business registrations (restaurants, supermarkets, and software firms) across Singapore** from Jan–Jun 2025.
 
@@ -1242,11 +1242,11 @@ p <- ggplot(lisa_rest) +
 animate(
   p,
   width = 960, height = 640, fps = 6, duration = 10, end_pause = 8,
-  renderer = gifski_renderer("images/lisa_restaurants.gif")
+  renderer = gifski_renderer("lisa_restaurants.gif")
 )
 ```
 
-![](images/lisa_restaurants.gif)
+![](lisa_restaurants.gif)
 
 This code filters the spatio-temporal LISA results to **restaurants (SSIC 56111)**, ensuring months are ordered chronologically from January to June. It creates an animated map where each frame displays **Local Moran’s I hotspot classifications** for that month.
 
@@ -1286,11 +1286,11 @@ p <- ggplot(lisa_rest) +
 animate(
   p,
   width = 960, height = 640, fps = 6, duration = 10, end_pause = 8,
-  renderer = gifski_renderer("images/lisa_supermarkets.gif")
+  renderer = gifski_renderer("lisa_supermarkets.gif")
 )
 ```
 
-![](images/lisa_supermarkets.gif)
+![](lisa_supermarkets.gif)
 
 This code generates an animated **LISA hotspot map for supermarkets (SSIC 47101)** across January to June 2025. By applying Local Moran’s I, subzones are classified into clusters such as High-High (red), Low-Low (blue), and spatial outliers (orange, light-blue).
 
@@ -1328,11 +1328,11 @@ p <- ggplot(lisa_rest) +
 animate(
   p,
   width = 960, height = 640, fps = 6, duration = 10, end_pause = 8,
-  renderer = gifski_renderer("images/lisa_softwaredevs.gif")
+  renderer = gifski_renderer("lisa_softwaredevs.gif")
 )
 ```
 
-![](images/lisa_softwaredevs.gif)
+![](lisa_softwaredevs.gif)
 
 This code animates **spatial hotspots for software development businesses (SSIC 62011)** across January–June 2025 using Local Moran’s I. Subzones are classified as High-High (red), Low-Low (blue), or spatial outliers (orange/light-blue).
 
