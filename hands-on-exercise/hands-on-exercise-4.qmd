@@ -101,7 +101,7 @@ plot(hunan$geometry, border="lightgrey")
 plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
 ```
 
-#### 8.3.3.2 Plotting Rook Contiguity Based Neighbours Map 
+#### 8.3.3.2 Plotting Rook Contiguity Based Neighbours Map
 
 ```{r}
 plot(hunan$geometry, border="lightgrey")
