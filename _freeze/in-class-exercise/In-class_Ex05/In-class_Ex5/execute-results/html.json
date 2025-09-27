@@ -1,0 +1,15 @@
+{
+  "hash": "2567082d80730af3304639a6075a01d7",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"In-class Exercise 5\"\nformat: html\nauthor: \"Bryan Bramaskara\"\ndate: \"September 27, 2025\"\ndate-modified: \"last-modified\"\nexecute: \n  eval: false\n  echo: true\n  warning: false\n  freeze: true\n---\n\n\n::: {.cell}\n\n```{.r .cell-code}\npacman::p_load(sf, tmap, sfdep, tidyverse)\n```\n:::\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\nhunan2012 <- read_csv(\"data/aspatial/Hunan_2012.csv\")\n```\n:::\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\nhunan <- st_read(dsn = \"data/geospatial\", \n                 layer = \"Hunan\")\n```\n:::\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\nhunan_GDPPC <- left_join(hunan,hunan2012) %>%\n  select(1:4, 7, 15)\n```\n:::\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\nwm_q <- hunan_GDPPC %>% \n    mutate(nb = st_contiguity(geometry),\n           wt = st_weights(nb,\n                           style = \"W\"),\n           .before = 1)\n```\n:::\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

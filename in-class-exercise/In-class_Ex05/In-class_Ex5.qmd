@@ -1,0 +1,42 @@
+---
+title: "In-class Exercise 5"
+format: html
+author: "Bryan Bramaskara"
+date: "September 27, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: false
+  echo: true
+  warning: false
+  freeze: true
+---
+
+```{r}
+pacman::p_load(sf, tmap, sfdep, tidyverse)
+```
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+```
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial", 
+                 layer = "Hunan")
+```
+
+```{r}
+hunan_GDPPC <- left_join(hunan,hunan2012) %>%
+  select(1:4, 7, 15)
+```
+
+```{r}
+wm_q <- hunan_GDPPC %>% 
+    mutate(nb = st_contiguity(geometry),
+           wt = st_weights(nb,
+                           style = "W"),
+           .before = 1)
+```
+
+```{r}
+set.seed(888)
+```
