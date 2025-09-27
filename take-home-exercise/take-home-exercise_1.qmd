@@ -70,7 +70,7 @@ pacman::p_load(dplyr, lubridate, stringr, tidyverse, sf, httr, ggplot2, dbscan, 
 ```
 
 | Category | Packages | Purpose/Usage |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | **Data Wrangling & Manipulation** | `dplyr`, `lubridate`, `stringr`, `rvest,` `tidyverse` | Data cleaning, transformation, string/date handling (`year()`, `month()`, `str_pad()`), and parsing HTML fields from KML (extracting subzone info). |
 | **Spatial Data Handling** | `sf`, `spdep`, `dbscan` | Reading & managing geospatial data (KML, CSV), CRS transformation (EPSG:3414 ↔ EPSG:4326), spatial weights & autocorrelation (Moran’s I, LISA), and density-based clustering (DBSCAN). |
 | **Visualization (Static & Animated)** | `ggplot2`, `gganimate`, `gifski` | Choropleths, hotspot maps, clustering visualizations, and animated GIFs of spatio-temporal hotspot evolution. |
