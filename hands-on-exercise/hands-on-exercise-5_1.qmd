@@ -1,0 +1,205 @@
+---
+title: "Hands-on Exercise 5.1"
+format: html
+date: "September 25, 2025"
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
+---
+
+# 9. Global Measures of Spatial Autocorrelation
+
+## 9.1  Overview
+
+Packages used are:
+
+-   sf
+
+-   readr
+
+-   dplyr
+
+-   spdep
+
+## 9.2 Getting Started
+
+### 9.2.1 Installing packages
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+```
+
+### 9.2.2 Import shapefile into r environment
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial", 
+                 layer = "Hunan")
+```
+
+### 9.2.3 Import csv file into r environment
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+```
+
+### 9.2.4 Performing relational join
+
+```{r}
+hunan <- left_join(hunan,hunan2012) %>%
+  select(1:4, 7, 15)
+```
+
+### 9.2.5 Visualising Regional Development Indicator
+
+```{r}
+equal <- tm_shape(hunan) +
+  tm_polygons(fill = "GDPPC",
+              fill.scale = tm_scale_intervals(
+                style = "equal",
+                n = 5,
+                values = "brewer.blues")) +
+  tm_borders(fiil_alpha = 0.5) + 
+  tm_layout(legend.position = c("left", "bottom"), 
+            main.title = "Equal interval classification")
+
+quantile <- tm_shape(hunan) +
+  tm_polygons(fill = "GDPPC",
+              fill.scale = tm_scale_intervals(
+                style = "quantile",
+                n = 5)) +
+  tm_borders(fiil_alpha = 0.5) + 
+  tm_layout(legend.position = c("left", "bottom"), 
+            main.title = "Quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+```
+
+## 9.3 Global Measures of Spatial Autocorrelation
+
+### 9.3.1 Computing Contiguity Spatial Weights
+
+```{r}
+wm_q <- poly2nb(hunan, 
+                queen=TRUE)
+summary(wm_q)
+```
+
+### 9.3.2 Row-standardised weights matrix
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
+
+## 9.4 Global Measures of Spatial Autocorrelation: Moran’s I
+
+### 9.4.1 Maron’s I test
+
+```{r}
+moran.test(hunan$GDPPC, 
+           listw=rswm_q, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+### 9.4.2 Computing Monte Carlo Moran’s I
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(hunan$GDPPC, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+### 9.4.3 Visualising Monte Carlo Moran’s I
+
+```{r}
+mean(bperm$res[1:999])
+
+var(bperm$res[1:999])
+
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, 
+     freq=TRUE, 
+     breaks=20, 
+     xlab="Simulated Moran's I")
+abline(v=0, 
+       col="red") 
+```
+
+## 9.5 Global Measures of Spatial Autocorrelation: Geary’s C
+
+### 9.5.1 Geary’s C test
+
+```{r}
+geary.test(hunan$GDPPC, listw=rswm_q)
+```
+
+### 9.5.2 Computing Monte Carlo Geary’s C
+
+```{r}
+set.seed(1234)
+bperm=geary.mc(hunan$GDPPC, 
+               listw=rswm_q, 
+               nsim=999)
+bperm
+```
+
+### 9.5.3 Visualising the Monte Carlo Geary’s C
+
+```{r}
+mean(bperm$res[1:999])
+var(bperm$res[1:999])
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+
+## 9.6 Spatial Correlogram
+
+### 9.6.1 Compute Moran’s I correlogram
+
+```{r}
+MI_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+plot(MI_corr)
+```
+
+```{r}
+print(MI_corr)
+```
+
+### 9.6.2 Compute Geary’s C correlogram and plot
+
+```{r}
+GC_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="C", 
+                          style="W")
+plot(GC_corr)
+```
+
+```{r}
+print(GC_corr)
+```
